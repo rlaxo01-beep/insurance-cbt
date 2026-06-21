@@ -20,3 +20,88 @@ button,select{font:inherit} button{border:1px solid var(--line);border-radius:14
 .explainBox{margin-top:10px;white-space:pre-wrap;line-height:1.58;font-weight:700}
 .feedback b{display:block;margin-bottom:4px}
 .reviewExplain{margin-top:8px;color:var(--muted);font-size:14px;line-height:1.5;white-space:pre-wrap}
+
+
+/* v11 이동식 필기 기능 */
+.imgBox{position:relative}
+.inkCanvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:5;
+  pointer-events:none;
+  touch-action:none;
+}
+.inkCanvas.active{pointer-events:auto}
+.drawFab{
+  position:fixed;
+  top:88px;
+  right:14px;
+  z-index:110;
+  width:58px;
+  height:58px;
+  border-radius:22px;
+  font-size:25px;
+  background:var(--brand);
+  color:#fff;
+  border:0;
+  box-shadow:0 12px 30px rgba(0,0,0,.25);
+  touch-action:none;
+}
+.drawPanel{
+  position:fixed;
+  top:154px;
+  right:14px;
+  z-index:111;
+  width:min(360px, calc(100vw - 24px));
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.25);
+  overflow:hidden;
+}
+.drawHandle{
+  padding:12px 14px;
+  font-weight:900;
+  background:var(--brand);
+  color:#fff;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+}
+.drawHandle span{
+  display:block;
+  font-size:12px;
+  opacity:.85;
+  margin-top:2px;
+}
+.drawTools,.drawSub{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  padding:10px;
+}
+.drawSub{padding-top:0}
+.toolBtn,.sizeBtn{
+  padding:10px 8px;
+  font-size:14px;
+  border-radius:12px;
+}
+.toolBtn.active,.sizeBtn.active,.toolBtn.on{
+  background:var(--brand2);
+  color:var(--brand);
+  border-color:var(--brand);
+}
+.toolBtn.danger{
+  color:var(--bad);
+}
+:root.dark .drawPanel{background:var(--card)}
+@media(max-width:760px){
+  .drawFab{top:76px;right:10px;width:54px;height:54px;border-radius:20px}
+  .drawPanel{top:136px;right:10px}
+}
+
+/* v11 해설 가독성 보강 */
+.explainBox{white-space:pre-wrap;line-height:1.72;font-weight:700;font-size:15.5px}
+.feedback{max-height:none}

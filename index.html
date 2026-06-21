@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#00897b">
-  <title>보험대리점 CBT v9</title>
-  <link rel="stylesheet" href="./style.css?v=9">
+  <title>보험대리점 CBT v11</title>
+  <link rel="stylesheet" href="./style.css?v=11">
 </head>
 <body>
   <main class="wrap">
     <header class="header">
       <div>
         <h1>보험대리점 CBT</h1>
-        <p>생명보험 · 제3보험 · 공통 / 개인 학습용 v9 · 고급 해설 · 수동 넘김</p>
+        <p>생명보험 · 제3보험 · 공통 / 개인 학습용 v11 · 고급 해설 · 수동 넘김 · 이동식 필기</p>
       </div>
       <button id="theme" class="round">🌙</button>
     </header>
@@ -96,6 +96,7 @@
       <div class="imgBox">
         <div id="loading">이미지 불러오는 중...</div>
         <img id="qimg" alt="문제 이미지">
+        <canvas id="inkCanvas" class="inkCanvas"></canvas>
         <button id="zoom" class="zoom">확대</button>
       </div>
 
@@ -128,273 +129,32 @@
     </section>
   </main>
 
+
+  <button id="drawFab" class="drawFab" title="필기">✏️</button>
+
+  <div id="drawPanel" class="drawPanel hidden">
+    <div id="drawHandle" class="drawHandle">✏️ 필기 도구 <span>드래그해서 이동</span></div>
+    <div class="drawTools">
+      <button id="drawToggle" class="toolBtn on">필기 ON</button>
+      <button id="penTool" class="toolBtn active">펜</button>
+      <button id="highTool" class="toolBtn">형광</button>
+      <button id="eraseTool" class="toolBtn">지우개</button>
+      <button id="clearInk" class="toolBtn danger">삭제</button>
+      <button id="closeDraw" class="toolBtn">닫기</button>
+    </div>
+    <div class="drawSub">
+      <button class="sizeBtn" data-size="3">얇게</button>
+      <button class="sizeBtn active" data-size="6">보통</button>
+      <button class="sizeBtn" data-size="11">굵게</button>
+    </div>
+  </div>
+
   <div id="modal" class="modal hidden">
     <button id="close">×</button>
     <img id="modalImg" alt="확대 문제">
   </div>
 
-  <script src="./questions.js?v=9"></script>
-  <script src="./app.js?v=9"></script>
-
-  <!-- ===== CBT 화면 필기 기능 시작 ===== -->
-  <style>
-    #drawCanvas {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 9998;
-      touch-action: none;
-      pointer-events: none;
-    }
-
-    #drawToolbar {
-      position: fixed;
-      right: 10px;
-      bottom: 14px;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px;
-      border-radius: 16px;
-      background: rgba(20, 20, 20, 0.78);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      user-select: none;
-    }
-
-    #drawToolbar button {
-      min-width: 44px;
-      min-height: 40px;
-      border: 0;
-      border-radius: 12px;
-      padding: 8px 10px;
-      background: #ffffff;
-      color: #111111;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    #drawToolbar button.active {
-      background: #00a884;
-      color: #ffffff;
-    }
-
-    #drawToolbar button.warn {
-      background: #ffebee;
-      color: #c62828;
-    }
-
-    #drawToolbar.collapsed button:not(#drawMini) {
-      display: none;
-    }
-
-    #drawToolbar.collapsed {
-      padding: 6px;
-      border-radius: 999px;
-    }
-
-    @media (max-width: 520px) {
-      #drawToolbar {
-        left: 8px;
-        right: 8px;
-        bottom: 10px;
-        justify-content: center;
-        overflow-x: auto;
-      }
-
-      #drawToolbar button {
-        min-width: 40px;
-        padding: 8px 9px;
-        font-size: 13px;
-        white-space: nowrap;
-      }
-    }
-  </style>
-
-  <canvas id="drawCanvas" aria-label="화면 필기 레이어"></canvas>
-
-  <div id="drawToolbar" class="collapsed" aria-label="필기 도구">
-    <button id="drawMini" title="필기 도구 열기/닫기">✏️</button>
-    <button id="drawToggle" title="필기 모드 켜기/끄기">필기 OFF</button>
-    <button id="penBtn" title="빨간 펜">펜</button>
-    <button id="highBtn" title="노란 형광펜">형광</button>
-    <button id="eraserBtn" title="지우개">지우개</button>
-    <button id="clearBtn" class="warn" title="현재 필기 전체 삭제">삭제</button>
-  </div>
-
-  <script>
-    (() => {
-      const canvas = document.getElementById("drawCanvas");
-      const ctx = canvas.getContext("2d");
-      const toolbar = document.getElementById("drawToolbar");
-
-      const drawMini = document.getElementById("drawMini");
-      const drawToggle = document.getElementById("drawToggle");
-      const penBtn = document.getElementById("penBtn");
-      const highBtn = document.getElementById("highBtn");
-      const eraserBtn = document.getElementById("eraserBtn");
-      const clearBtn = document.getElementById("clearBtn");
-
-      let drawingMode = false;
-      let isDrawing = false;
-      let tool = "pen";
-      let lastX = 0;
-      let lastY = 0;
-
-      function resizeCanvas() {
-        const oldImage = new Image();
-        const oldData = canvas.width && canvas.height ? canvas.toDataURL("image/png") : null;
-        const dpr = window.devicePixelRatio || 1;
-
-        canvas.width = Math.round(window.innerWidth * dpr);
-        canvas.height = Math.round(window.innerHeight * dpr);
-        canvas.style.width = window.innerWidth + "px";
-        canvas.style.height = window.innerHeight + "px";
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        if (oldData) {
-          oldImage.onload = () => {
-            ctx.drawImage(oldImage, 0, 0, window.innerWidth, window.innerHeight);
-          };
-          oldImage.src = oldData;
-        }
-      }
-
-      function clearDrawing() {
-        const dpr = window.devicePixelRatio || 1;
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-
-      function setTool(nextTool) {
-        tool = nextTool;
-        penBtn.classList.toggle("active", tool === "pen");
-        highBtn.classList.toggle("active", tool === "highlighter");
-        eraserBtn.classList.toggle("active", tool === "eraser");
-      }
-
-      function setDrawingMode(on) {
-        drawingMode = on;
-        canvas.style.pointerEvents = on ? "auto" : "none";
-        drawToggle.classList.toggle("active", on);
-        drawToggle.textContent = on ? "필기 ON" : "필기 OFF";
-      }
-
-      function getPoint(event) {
-        return {
-          x: event.clientX,
-          y: event.clientY
-        };
-      }
-
-      function startDraw(event) {
-        if (!drawingMode) return;
-        event.preventDefault();
-        isDrawing = true;
-        const p = getPoint(event);
-        lastX = p.x;
-        lastY = p.y;
-      }
-
-      function draw(event) {
-        if (!drawingMode || !isDrawing) return;
-        event.preventDefault();
-
-        const p = getPoint(event);
-
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(p.x, p.y);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-
-        if (tool === "pen") {
-          ctx.globalCompositeOperation = "source-over";
-          ctx.strokeStyle = "#ff1744";
-          ctx.lineWidth = 3;
-          ctx.globalAlpha = 1;
-        } else if (tool === "highlighter") {
-          ctx.globalCompositeOperation = "source-over";
-          ctx.strokeStyle = "#ffeb3b";
-          ctx.lineWidth = 18;
-          ctx.globalAlpha = 0.38;
-        } else if (tool === "eraser") {
-          ctx.globalCompositeOperation = "destination-out";
-          ctx.lineWidth = 24;
-          ctx.globalAlpha = 1;
-        }
-
-        ctx.stroke();
-
-        lastX = p.x;
-        lastY = p.y;
-      }
-
-      function stopDraw() {
-        isDrawing = false;
-        ctx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = 1;
-      }
-
-      drawMini.addEventListener("click", () => {
-        toolbar.classList.toggle("collapsed");
-      });
-
-      drawToggle.addEventListener("click", () => {
-        setDrawingMode(!drawingMode);
-      });
-
-      penBtn.addEventListener("click", () => {
-        setTool("pen");
-        setDrawingMode(true);
-      });
-
-      highBtn.addEventListener("click", () => {
-        setTool("highlighter");
-        setDrawingMode(true);
-      });
-
-      eraserBtn.addEventListener("click", () => {
-        setTool("eraser");
-        setDrawingMode(true);
-      });
-
-      clearBtn.addEventListener("click", clearDrawing);
-
-      canvas.addEventListener("pointerdown", startDraw);
-      canvas.addEventListener("pointermove", draw);
-      canvas.addEventListener("pointerup", stopDraw);
-      canvas.addEventListener("pointercancel", stopDraw);
-      canvas.addEventListener("pointerleave", stopDraw);
-
-      window.addEventListener("resize", resizeCanvas);
-      window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 250));
-
-      // 문제를 넘기면 이전 필기는 자동 삭제
-      const now = document.getElementById("now");
-      if (now) {
-        const observer = new MutationObserver(() => {
-          clearDrawing();
-          setDrawingMode(false);
-        });
-        observer.observe(now, { childList: true, characterData: true, subtree: true });
-      }
-
-      resizeCanvas();
-      setTool("pen");
-      setDrawingMode(false);
-    })();
-  </script>
-  <!-- ===== CBT 화면 필기 기능 끝 ===== -->
-
+  <script src="./questions.js?v=11"></script>
+  <script src="./app.js?v=11"></script>
 </body>
 </html>

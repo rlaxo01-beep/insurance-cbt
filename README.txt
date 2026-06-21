@@ -1,1 +1,1 @@
-v9: 고급 해설 보강 + 답 선택 후 자동으로 넘어가지 않음. 기존 GitHub에 index.html, style.css, app.js, questions.js 4개만 덮어쓰기 업로드하세요. assets 폴더는 그대로 두면 됩니다.
+v11 최종 해설 1차본: 320문제 전체 explain 필드를 상세 해설 형식으로 보강했습니다. GitHub에는 index.html, style.css, app.js, questions.js 4개만 덮어쓰기 업로드하세요. assets 폴더는 그대로 두세요.
