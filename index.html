@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#00897b">
+  <title>보험대리점 CBT v9</title>
+  <link rel="stylesheet" href="./style.css?v=9">
+</head>
+<body>
+  <main class="wrap">
+    <header class="header">
+      <div>
+        <h1>보험대리점 CBT</h1>
+        <p>생명보험 · 제3보험 · 공통 / 개인 학습용 v9 · 고급 해설 · 수동 넘김</p>
+      </div>
+      <button id="theme" class="round">🌙</button>
+    </header>
+
+    <section id="home" class="card">
+      <div class="dashboard">
+        <div><b id="total">320</b><span>전체</span></div>
+        <div><b id="wrongCount">0</b><span>오답</span></div>
+        <div><b id="starCount">0</b><span>별표</span></div>
+      </div>
+
+      <div class="actions">
+        <button id="random50" class="main">통합 랜덤 50문제</button>
+        <button id="exam40">실전 랜덤 40문제</button>
+        <button id="all">전체 320문제</button>
+        <button id="wrong">오답만</button>
+        <button id="starred">별표만</button>
+        <button id="resume">이어풀기</button>
+      </div>
+
+      <details open>
+        <summary>세부 설정</summary>
+        <div class="settings">
+          <label>문제 수
+            <select id="count">
+              <option value="20">20문제</option>
+              <option value="40">40문제</option>
+              <option value="50" selected>50문제</option>
+              <option value="100">100문제</option>
+              <option value="all">전체</option>
+            </select>
+          </label>
+          <label>풀이 모드
+            <select id="mode">
+              <option value="instant" selected>바로 채점</option>
+              <option value="exam">마지막 채점</option>
+            </select>
+          </label>
+          <label>출제 순서
+            <select id="order">
+              <option value="shuffle" selected>랜덤</option>
+              <option value="order">자료 순서</option>
+            </select>
+          </label>
+          <label>자동 넘김
+            <select id="auto">
+              <option value="off" selected>끄기</option>
+              <option value="correct">맞으면 자동</option>
+              <option value="always">항상 자동</option>
+            </select>
+          </label>
+        </div>
+        <div class="filterBtns">
+          <button id="fAll">전체</button>
+          <button id="f25">25년 모의</button>
+          <button id="f26">26년 쪽집게</button>
+          <button id="fExpected">26년 예상</button>
+        </div>
+        <div id="sets" class="sets"></div>
+        <button id="custom" class="main wide">선택 범위로 시작</button>
+      </details>
+
+      <p class="hint">단축키: 1~4 답 선택 · ← 이전 · →/Enter 다음 · S 별표</p>
+    </section>
+
+    <section id="quiz" class="card hidden">
+      <div class="top">
+        <button id="exit">← 나가기</button>
+        <strong><span id="now">1</span> / <span id="max">50</span></strong>
+        <span id="timer">00:00</span>
+      </div>
+      <div class="bar"><div id="bar"></div></div>
+
+      <div class="meta">
+        <span id="setName" class="pill"></span>
+        <span id="localNo" class="pill mute"></span>
+        <span id="answerState" class="pill mute">정답 숨김</span>
+        <button id="starBtn" class="round small">☆</button>
+      </div>
+
+      <div class="imgBox">
+        <div id="loading">이미지 불러오는 중...</div>
+        <img id="qimg" alt="문제 이미지">
+        <button id="zoom" class="zoom">확대</button>
+      </div>
+
+      <div id="answers" class="answers"></div>
+      <div id="feedback" class="feedback hidden"></div>
+
+      <div class="nav">
+        <button id="prev">이전</button>
+        <button id="showAnswer">정답 보기</button>
+        <button id="next" class="main">다음</button>
+      </div>
+
+      <details class="jump">
+        <summary>문제 번호 이동</summary>
+        <div id="pad" class="pad"></div>
+      </details>
+    </section>
+
+    <section id="result" class="card hidden">
+      <h2>채점 결과</h2>
+      <div class="score"><b id="score">0</b>점</div>
+      <p id="scoreText"></p>
+      <div class="actions">
+        <button id="retryWrong" class="main">틀린 문제 다시</button>
+        <button id="retrySame">같은 문제 다시</button>
+        <button id="goHome">홈으로</button>
+      </div>
+      <h3>오답 목록</h3>
+      <div id="review"></div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <button id="close">×</button>
+    <img id="modalImg" alt="확대 문제">
+  </div>
+
+  <script src="./questions.js?v=9"></script>
+  <script src="./app.js?v=9"></script>
+
+  <!-- ===== CBT 화면 필기 기능 시작 ===== -->
+  <style>
+    #drawCanvas {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9998;
+      touch-action: none;
+      pointer-events: none;
+    }
+
+    #drawToolbar {
+      position: fixed;
+      right: 10px;
+      bottom: 14px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 16px;
+      background: rgba(20, 20, 20, 0.78);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      user-select: none;
+    }
+
+    #drawToolbar button {
+      min-width: 44px;
+      min-height: 40px;
+      border: 0;
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: #ffffff;
+      color: #111111;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #drawToolbar button.active {
+      background: #00a884;
+      color: #ffffff;
+    }
+
+    #drawToolbar button.warn {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    #drawToolbar.collapsed button:not(#drawMini) {
+      display: none;
+    }
+
+    #drawToolbar.collapsed {
+      padding: 6px;
+      border-radius: 999px;
+    }
+
+    @media (max-width: 520px) {
+      #drawToolbar {
+        left: 8px;
+        right: 8px;
+        bottom: 10px;
+        justify-content: center;
+        overflow-x: auto;
+      }
+
+      #drawToolbar button {
+        min-width: 40px;
+        padding: 8px 9px;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+    }
+  </style>
+
+  <canvas id="drawCanvas" aria-label="화면 필기 레이어"></canvas>
+
+  <div id="drawToolbar" class="collapsed" aria-label="필기 도구">
+    <button id="drawMini" title="필기 도구 열기/닫기">✏️</button>
+    <button id="drawToggle" title="필기 모드 켜기/끄기">필기 OFF</button>
+    <button id="penBtn" title="빨간 펜">펜</button>
+    <button id="highBtn" title="노란 형광펜">형광</button>
+    <button id="eraserBtn" title="지우개">지우개</button>
+    <button id="clearBtn" class="warn" title="현재 필기 전체 삭제">삭제</button>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("drawCanvas");
+      const ctx = canvas.getContext("2d");
+      const toolbar = document.getElementById("drawToolbar");
+
+      const drawMini = document.getElementById("drawMini");
+      const drawToggle = document.getElementById("drawToggle");
+      const penBtn = document.getElementById("penBtn");
+      const highBtn = document.getElementById("highBtn");
+      const eraserBtn = document.getElementById("eraserBtn");
+      const clearBtn = document.getElementById("clearBtn");
+
+      let drawingMode = false;
+      let isDrawing = false;
+      let tool = "pen";
+      let lastX = 0;
+      let lastY = 0;
+
+      function resizeCanvas() {
+        const oldImage = new Image();
+        const oldData = canvas.width && canvas.height ? canvas.toDataURL("image/png") : null;
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = Math.round(window.innerWidth * dpr);
+        canvas.height = Math.round(window.innerHeight * dpr);
+        canvas.style.width = window.innerWidth + "px";
+        canvas.style.height = window.innerHeight + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        if (oldData) {
+          oldImage.onload = () => {
+            ctx.drawImage(oldImage, 0, 0, window.innerWidth, window.innerHeight);
+          };
+          oldImage.src = oldData;
+        }
+      }
+
+      function clearDrawing() {
+        const dpr = window.devicePixelRatio || 1;
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function setTool(nextTool) {
+        tool = nextTool;
+        penBtn.classList.toggle("active", tool === "pen");
+        highBtn.classList.toggle("active", tool === "highlighter");
+        eraserBtn.classList.toggle("active", tool === "eraser");
+      }
+
+      function setDrawingMode(on) {
+        drawingMode = on;
+        canvas.style.pointerEvents = on ? "auto" : "none";
+        drawToggle.classList.toggle("active", on);
+        drawToggle.textContent = on ? "필기 ON" : "필기 OFF";
+      }
+
+      function getPoint(event) {
+        return {
+          x: event.clientX,
+          y: event.clientY
+        };
+      }
+
+      function startDraw(event) {
+        if (!drawingMode) return;
+        event.preventDefault();
+        isDrawing = true;
+        const p = getPoint(event);
+        lastX = p.x;
+        lastY = p.y;
+      }
+
+      function draw(event) {
+        if (!drawingMode || !isDrawing) return;
+        event.preventDefault();
+
+        const p = getPoint(event);
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(p.x, p.y);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        if (tool === "pen") {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.strokeStyle = "#ff1744";
+          ctx.lineWidth = 3;
+          ctx.globalAlpha = 1;
+        } else if (tool === "highlighter") {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.strokeStyle = "#ffeb3b";
+          ctx.lineWidth = 18;
+          ctx.globalAlpha = 0.38;
+        } else if (tool === "eraser") {
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.lineWidth = 24;
+          ctx.globalAlpha = 1;
+        }
+
+        ctx.stroke();
+
+        lastX = p.x;
+        lastY = p.y;
+      }
+
+      function stopDraw() {
+        isDrawing = false;
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+      }
+
+      drawMini.addEventListener("click", () => {
+        toolbar.classList.toggle("collapsed");
+      });
+
+      drawToggle.addEventListener("click", () => {
+        setDrawingMode(!drawingMode);
+      });
+
+      penBtn.addEventListener("click", () => {
+        setTool("pen");
+        setDrawingMode(true);
+      });
+
+      highBtn.addEventListener("click", () => {
+        setTool("highlighter");
+        setDrawingMode(true);
+      });
+
+      eraserBtn.addEventListener("click", () => {
+        setTool("eraser");
+        setDrawingMode(true);
+      });
+
+      clearBtn.addEventListener("click", clearDrawing);
+
+      canvas.addEventListener("pointerdown", startDraw);
+      canvas.addEventListener("pointermove", draw);
+      canvas.addEventListener("pointerup", stopDraw);
+      canvas.addEventListener("pointercancel", stopDraw);
+      canvas.addEventListener("pointerleave", stopDraw);
+
+      window.addEventListener("resize", resizeCanvas);
+      window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 250));
+
+      // 문제를 넘기면 이전 필기는 자동 삭제
+      const now = document.getElementById("now");
+      if (now) {
+        const observer = new MutationObserver(() => {
+          clearDrawing();
+          setDrawingMode(false);
+        });
+        observer.observe(now, { childList: true, characterData: true, subtree: true });
+      }
+
+      resizeCanvas();
+      setTool("pen");
+      setDrawingMode(false);
+    })();
+  </script>
+  <!-- ===== CBT 화면 필기 기능 끝 ===== -->
+
+</body>
+</html>
