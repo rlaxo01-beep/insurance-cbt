@@ -16,3 +16,7 @@ button,select{font:inherit} button{border:1px solid var(--line);border-radius:14
 .score{text-align:center}.score b{font-size:72px;color:var(--brand)}#review{display:grid;gap:10px}.reviewItem{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--bg);display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:99;display:flex;align-items:center;justify-content:center;padding:16px}.modal img{max-width:100%;max-height:100%;object-fit:contain}.modal button{position:fixed;right:16px;top:16px;width:48px;height:48px;border-radius:50%;font-size:28px;background:#fff;color:#111;padding:0}
 @media(max-width:760px){.wrap{padding:10px}.card{padding:15px;border-radius:20px}h1{font-size:24px}.actions,.settings,.nav{grid-template-columns:1fr}.answers{grid-template-columns:repeat(2,1fr)}.top{grid-template-columns:auto 1fr auto}.pad{grid-template-columns:repeat(5,1fr)}.imgBox{min-height:180px}.reviewItem{grid-template-columns:1fr}}
+
+.explain{margin-top:10px;line-height:1.55;font-weight:700;white-space:pre-wrap}
+.reviewExplain{margin-top:8px;color:var(--muted);line-height:1.45;font-size:14px}
+.feedback b{display:block;margin-bottom:4px}
